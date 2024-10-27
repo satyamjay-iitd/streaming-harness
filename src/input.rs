@@ -1,20 +1,19 @@
 use std::ops::Add;
 
-pub trait InputTimeResumableIterator<T: Eq+Ord>: Iterator<Item=T> {
+pub trait InputTimeResumableIterator<T: Eq + Ord>: Iterator<Item = T> {
     #[inline(always)]
     fn peek(&mut self) -> Option<&T>;
     #[inline(always)]
     fn end(&self) -> bool;
 }
 
-pub struct ConstantThroughputInputTimes<T: Copy+Eq+Ord+Add<DT, Output=T>, DT> {
+pub struct ConstantThroughputInputTimes<T: Copy + Eq + Ord + Add<DT, Output = T>, DT> {
     next: T,
     inter_arrival: DT,
     end: T,
 }
 
-
-impl<T: Copy+Eq+Ord+Add<DT, Output=T>, DT: Copy> ConstantThroughputInputTimes<T, DT> {
+impl<T: Copy + Eq + Ord + Add<DT, Output = T>, DT: Copy> ConstantThroughputInputTimes<T, DT> {
     pub fn new(first: T, inter_arrival: DT, end: T) -> Self {
         Self {
             next: first,
@@ -24,7 +23,9 @@ impl<T: Copy+Eq+Ord+Add<DT, Output=T>, DT: Copy> ConstantThroughputInputTimes<T,
     }
 }
 
-impl<T: Copy+Eq+Ord+Add<DT, Output=T>, DT: Copy> Iterator for ConstantThroughputInputTimes<T, DT> {
+impl<T: Copy + Eq + Ord + Add<DT, Output = T>, DT: Copy> Iterator
+    for ConstantThroughputInputTimes<T, DT>
+{
     type Item = T;
     #[inline(always)]
     fn next(&mut self) -> Option<T> {
@@ -38,7 +39,9 @@ impl<T: Copy+Eq+Ord+Add<DT, Output=T>, DT: Copy> Iterator for ConstantThroughput
     }
 }
 
-impl<T: Copy+Eq+Ord+Add<DT, Output=T>, DT: Copy> InputTimeResumableIterator<T> for ConstantThroughputInputTimes<T, DT> {
+impl<T: Copy + Eq + Ord + Add<DT, Output = T>, DT: Copy> InputTimeResumableIterator<T>
+    for ConstantThroughputInputTimes<T, DT>
+{
     #[inline(always)]
     fn peek(&mut self) -> Option<&T> {
         if !self.end() {
@@ -53,12 +56,12 @@ impl<T: Copy+Eq+Ord+Add<DT, Output=T>, DT: Copy> InputTimeResumableIterator<T> f
     }
 }
 
-pub struct SyntheticInputTimeGenerator<T: Copy+Eq+Ord, I: InputTimeResumableIterator<T>> {
+pub struct SyntheticInputTimeGenerator<T: Copy + Eq + Ord, I: InputTimeResumableIterator<T>> {
     input_times: I,
     _phantom_data: ::std::marker::PhantomData<T>,
 }
 
-impl<T: Copy+Eq+Ord, I: InputTimeResumableIterator<T>> SyntheticInputTimeGenerator<T, I> {
+impl<T: Copy + Eq + Ord, I: InputTimeResumableIterator<T>> SyntheticInputTimeGenerator<T, I> {
     pub fn new(input_times: I) -> Self {
         Self {
             input_times,
@@ -66,7 +69,10 @@ impl<T: Copy+Eq+Ord, I: InputTimeResumableIterator<T>> SyntheticInputTimeGenerat
         }
     }
 
-    pub fn iter_until<'a>(&'a mut self, until: T) -> Option<impl Iterator<Item=T>+'a> {
+    pub fn iter_until<'a>(
+        &'a mut self,
+        until: T,
+    ) -> Option<SyntheticInputTimeGeneratorIterator<'a, T, I>> {
         if self.input_times.end() {
             None
         } else {
@@ -78,12 +84,18 @@ impl<T: Copy+Eq+Ord, I: InputTimeResumableIterator<T>> SyntheticInputTimeGenerat
     }
 }
 
-pub struct SyntheticInputTimeGeneratorIterator<'a, T: Copy+Eq+Ord+'a, I: InputTimeResumableIterator<T>+'a> {
+pub struct SyntheticInputTimeGeneratorIterator<
+    'a,
+    T: Copy + Eq + Ord + 'a,
+    I: InputTimeResumableIterator<T> + 'a,
+> {
     referenced: &'a mut SyntheticInputTimeGenerator<T, I>,
     until: T,
 }
 
-impl<'a, T: Copy+Eq+Ord+'a, I: InputTimeResumableIterator<T>+'a> Iterator for SyntheticInputTimeGeneratorIterator<'a, T, I> {
+impl<'a, T: Copy + Eq + Ord + 'a, I: InputTimeResumableIterator<T> + 'a> Iterator
+    for SyntheticInputTimeGeneratorIterator<'a, T, I>
+{
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
